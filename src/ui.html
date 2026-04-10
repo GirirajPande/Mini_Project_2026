@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080c0a; --bg2: #0d1210; --bg3: #111917;
+  --border: #1e3028; --border2: #2a4038;
+  --green: #00e676; --green2: #00c853; --green-dim: #004d28;
+  --red: #ff1744; --red-dim: #4a0010;
+  --amber: #ffab00; --amber-dim: #4a3000;
+  --text: #b8d4c8; --text2: #6a9080;
+  --mono: 'Share Tech Mono', monospace;
+  --title: 'Rajdhani', sans-serif;
+}
+body { background: var(--bg); color: var(--text); font-family: var(--title); min-height: 100vh; overflow: hidden; }
+
+/* TOPBAR */
+.topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 32px; height: 32px; border: 2px solid var(--green); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; }
+.logo-icon::before { content: ''; width: 14px; height: 14px; border: 2px solid var(--green); border-radius: 50%; }
+.logo-icon::after { content: ''; position: absolute; width: 4px; height: 4px; background: var(--green); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+.logo-text { font-family: var(--title); font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--green); text-transform: uppercase; }
+.logo-sub { font-family: var(--mono); font-size: 10px; color: var(--text2); letter-spacing: 2px; margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.sys-time { font-family: var(--mono); font-size: 13px; color: var(--green2); letter-spacing: 1px; }
+.sys-status { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+.dot-green { background: var(--green); }
+.dot-red { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* LAYOUT */
+.main { display: grid; grid-template-columns: 1fr 300px; height: calc(100vh - 86px); gap: 1px; background: var(--border); }
+.panel { background: var(--bg); padding: 16px; overflow: hidden; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.panel-title { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--text2); text-transform: uppercase; }
+.panel-badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 2px; letter-spacing: 1px; }
+.badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green2); }
+.badge-red { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+
+/* CAMERA FEEDS */
+.camera-panel { display: flex; flex-direction: column; }
+.feed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; }
+.feed-item { position: relative; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; min-height: 160px; }
+.feed-item:hover { border-color: var(--green2); }
+.feed-item.alert-feed { border-color: var(--red); animation: border-flash 1s infinite; }
+@keyframes border-flash { 0%,100% { border-color: var(--red); } 50% { border-color: var(--red-dim); } }
+.feed-bg { width: 100%; height: 100%; background: linear-gradient(135deg, #0a1a12 0%, #0d2218 100%); display: flex; align-items: center; justify-content: center; position: relative; }
+.scanline { position: absolute; top:0;left:0;right:0;bottom:0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,230,118,0.015) 2px, rgba(0,230,118,0.015) 4px); pointer-events: none; }
+.feed-icon { width: 40px; height: 40px; border: 2px solid var(--border2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--border2); font-size: 18px; }
+.feed-icon.active { border-color: var(--green); color: var(--green); }
+.feed-overlay { position: absolute; bottom:0;left:0;right:0; background: rgba(8,12,10,0.85); padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; }
+.feed-label { font-family: var(--mono); font-size: 10px; color: var(--green); letter-spacing: 1px; }
+.feed-rec { display: flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 9px; color: var(--red); }
+.rec-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); animation: pulse 1s infinite; }
+.detection-box { position: absolute; border: 2px solid var(--green); border-radius: 2px; }
+.detection-label { position: absolute; top: -18px; left: 0; background: var(--green); color: #000; font-family: var(--mono); font-size: 9px; padding: 1px 5px; white-space: nowrap; }
+.detection-box.threat { border-color: var(--red); }
+.detection-box.threat .detection-label { background: var(--red); color: #fff; }
+.bracket { position: absolute; width: 10px; height: 10px; border-color: var(--green); border-style: solid; }
+.bracket-tl { top:4px;left:4px; border-width: 1px 0 0 1px; }
+.bracket-tr { top:4px;right:4px; border-width: 1px 1px 0 0; }
+.bracket-bl { bottom:4px;left:4px; border-width: 0 0 1px 1px; }
+.bracket-br { bottom:4px;right:4px; border-width: 0 1px 1px 0; }
+
+/* SIDEBAR */
+.sidebar { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+.sidebar > .panel { overflow-y: auto; }
+
+.alert-status { text-align: center; padding: 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 12px; }
+.alert-level { font-family: var(--mono); font-size: 18px; font-weight: 700; letter-spacing: 4px; margin-bottom: 4px; }
+.alert-level.safe { color: var(--green); }
+.alert-level.warning { color: var(--amber); }
+.alert-level.threat { color: var(--red); }
+.alert-sub { font-family: var(--mono); font-size: 10px; color: var(--text2); letter-spacing: 2px; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+.stat-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 10px; text-align: center; }
+.stat-val { font-family: var(--mono); font-size: 20px; color: var(--green); display: block; }
+.stat-label { font-family: var(--mono); font-size: 9px; color: var(--text2); letter-spacing: 1px; margin-top: 3px; display: block; }
+
+.log-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+.log-list::-webkit-scrollbar { width: 3px; }
+.log-list::-webkit-scrollbar-thumb { background: var(--border2); }
+.log-entry { font-family: var(--mono); font-size: 10px; padding: 5px 8px; border-left: 2px solid; background: var(--bg3); border-radius: 0 2px 2px 0; line-height: 1.5; }
+.log-entry.info { border-color: var(--green2); color: var(--text); }
+.log-entry.warning { border-color: var(--amber); color: var(--amber); }
+.log-entry.danger { border-color: var(--red); color: var(--red); }
+.log-time { opacity: 0.6; margin-right: 6px; }
+
+.ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ctrl-btn { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; padding: 10px 8px; border-radius: 3px; border: 1px solid; cursor: pointer; text-transform: uppercase; transition: all 0.15s; background: transparent; text-align: center; }
+.ctrl-btn:hover { opacity: 0.8; }
+.ctrl-btn:active { transform: scale(0.97); }
+.btn-start { border-color: var(--green); color: var(--green); }
+.btn-start:hover, .btn-start.active { background: var(--green-dim); }
+.btn-stop { border-color: var(--red); color: var(--red); }
+.btn-stop:hover { background: var(--red-dim); }
+.btn-train { border-color: var(--amber); color: var(--amber); grid-column: span 2; }
+.btn-train:hover { background: var(--amber-dim); }
+.btn-telegram { border-color: var(--text2); color: var(--text2); grid-column: span 2; }
+.btn-telegram:hover { background: var(--bg3); color: var(--text); }
+
+/* STATUSBAR */
+.statusbar { background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 20px; display: flex; align-items: center; gap: 24px; font-family: var(--mono); font-size: 10px; color: var(--text2); letter-spacing: 1px; height: 33px; }
+.sb-item { display: flex; align-items: center; gap: 6px; }
+.sb-val { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">VisionGuard</div>
+      <div class="logo-sub">Intelligent Surveillance System v2.1</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="sys-status"><div class="dot dot-green" id="sys-dot"></div> <span id="sys-label">ALL SYSTEMS ONLINE</span></div>
+    <div class="sys-time" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Camera Feeds -->
+  <div class="panel camera-panel">
+    <div class="panel-header">
+      <span class="panel-title">// LIVE FEEDS</span>
+      <span class="panel-badge badge-green">4 CAMERAS</span>
+    </div>
+    <div class="feed-grid">
+      <div class="feed-item" id="feed1">
+        <div class="feed-bg">
+          <div class="scanline"></div>
+          <div class="feed-icon active">&#9673;</div>
+          <div class="detection-box" id="face-box" style="left:35%;top:15%;width:28%;height:42%;">
+            <div class="detection-label" id="face-label">KNOWN · 94%</div>
+          </div>
+          <div class="bracket bracket-tl"></div><div class="bracket bracket-tr"></div>
+          <div class="bracket bracket-bl"></div><div class="bracket bracket-br"></div>
+        </div>
+        <div class="feed-overlay">
+          <span class="feed-label">CAM-01 · ENTRANCE</span>
+          <span class="feed-rec"><span class="rec-dot"></span>REC</span>
+        </div>
+      </div>
+
+      <div class="feed-item alert-feed" id="feed2">
+        <div class="feed-bg" style="background: linear-gradient(135deg, #1a0a08, #220d0a);">
+          <div class="scanline"></div>
+          <div class="feed-icon active" style="border-color:var(--red);color:var(--red);">&#9673;</div>
+          <div class="detection-box threat" style="left:20%;top:10%;width:30%;height:55%;">
+            <div class="detection-label">UNKNOWN · 87%</div>
+          </div>
+          <div class="detection-box threat" style="left:55%;top:40%;width:25%;height:35%;">
+            <div class="detection-label">KNIFE · 79%</div>
+          </div>
+          <div class="bracket bracket-tl" style="border-color:var(--red)"></div>
+          <div class="bracket bracket-tr" style="border-color:var(--red)"></div>
+          <div class="bracket bracket-bl" style="border-color:var(--red)"></div>
+          <div class="bracket bracket-br" style="border-color:var(--red)"></div>
+        </div>
+        <div class="feed-overlay" style="background:rgba(74,0,16,0.9)">
+          <span class="feed-label" style="color:var(--red)">CAM-02 · LOBBY ⚠</span>
+          <span class="feed-rec"><span class="rec-dot"></span>REC</span>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-bg">
+          <div class="scanline"></div>
+          <div class="feed-icon active">&#9673;</div>
+          <div class="bracket bracket-tl"></div><div class="bracket bracket-tr"></div>
+          <div class="bracket bracket-bl"></div><div class="bracket bracket-br"></div>
+        </div>
+        <div class="feed-overlay">
+          <span class="feed-label">CAM-03 · PARKING</span>
+          <span class="feed-rec"><span class="rec-dot"></span>REC</span>
+        </div>
+      </div>
+
+      <div class="feed-item" style="opacity:0.5;">
+        <div class="feed-bg">
+          <div class="feed-icon">&#9673;</div>
+        </div>
+        <div class="feed-overlay">
+          <span class="feed-label" style="color:var(--text2)">CAM-04 · STAIRWELL</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--text2)">OFFLINE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">// THREAT STATUS</span></div>
+      <div class="alert-status">
+        <div class="alert-level threat" id="alert-level">HIGH THREAT</div>
+        <div class="alert-sub" id="alert-sub">UNKNOWN + WEAPON DETECTED</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><span class="stat-val" id="faces-count">3</span><span class="stat-label">FACES</span></div>
+        <div class="stat-box"><span class="stat-val" id="known-count" style="color:var(--green)">2</span><span class="stat-label">KNOWN</span></div>
+        <div class="stat-box"><span class="stat-val" id="unknown-count" style="color:var(--red)">1</span><span class="stat-label">UNKNOWN</span></div>
+        <div class="stat-box"><span class="stat-val" id="threat-count" style="color:var(--amber)">2</span><span class="stat-label">ALERTS</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">// EVENT LOG</span>
+        <span class="panel-badge badge-amber" id="log-badge">LIVE</span>
+      </div>
+      <div class="log-list" id="log-list">
+        <div class="log-entry danger"><span class="log-time">--:--:--</span>HIGH THREAT · CAM-02<br>Unknown + knife detected</div>
+        <div class="log-entry warning"><span class="log-time">--:--:--</span>WARNING · CAM-02<br>Unrecognized face</div>
+        <div class="log-entry info"><span class="log-time">--:--:--</span>ACCESS · CAM-01<br>Known person identified</div>
+        <div class="log-entry info"><span class="log-time">--:--:--</span>SYSTEM · Monitoring started</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">// CONTROLS</span></div>
+      <div class="ctrl-grid">
+        <button class="ctrl-btn btn-start" id="btn-start" onclick="startMonitor()">&#9654; START</button>
+        <button class="ctrl-btn btn-stop" id="btn-stop" onclick="stopMonitor()">&#9646;&#9646; STOP</button>
+        <button class="ctrl-btn btn-train" onclick="trainModel()">&#9670; TRAIN FACE MODEL</button>
+        <button class="ctrl-btn btn-telegram" onclick="testTelegram()">&#9992; TEST TELEGRAM ALERT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="sb-item">MODEL <span class="sb-val">LBPH + YOLOv8n</span></div>
+  <div class="sb-item">THRESHOLD <span class="sb-val">0.65</span></div>
+  <div class="sb-item">COOLDOWN <span class="sb-val">10s</span></div>
+  <div class="sb-item">TELEGRAM <span class="sb-val" id="tg-status">CONNECTED</span></div>
+  <div class="sb-item" style="margin-left:auto">UPTIME <span class="sb-val" id="uptime">00:00:00</span></div>
+</div>
+
+<script>
+  let monitoring = false;
+  let uptimeSeconds = 0;
+  let uptimeInterval = null;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  setInterval(() => {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }, 1000);
+
+  function addLog(type, text) {
+    const list = document.getElementById('log-list');
+    const now = new Date();
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerHTML = `<span class="log-time">${time}</span>${text}`;
+    list.insertBefore(entry, list.firstChild);
+    if (list.children.length > 30) list.removeChild(list.lastChild);
+  }
+
+  function startMonitor() {
+    window.pywebview.api.start_monitoring().then(res => {
+      if (res.status === 'started' || res.status === 'already_running') {
+        monitoring = true;
+        document.getElementById('btn-start').classList.add('active');
+        document.getElementById('sys-label').textContent = 'MONITORING ACTIVE';
+        uptimeSeconds = 0;
+        if (uptimeInterval) clearInterval(uptimeInterval);
+        uptimeInterval = setInterval(() => {
+          uptimeSeconds++;
+          const h = Math.floor(uptimeSeconds/3600), m = Math.floor((uptimeSeconds%3600)/60), s = uptimeSeconds%60;
+          document.getElementById('uptime').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+        }, 1000);
+        addLog('info', 'SYSTEM · Monitoring started');
+      } else {
+        addLog('warning', `ERROR · ${res.message}`);
+      }
+    });
+  }
+
+  function stopMonitor() {
+    window.pywebview.api.stop_monitoring().then(res => {
+      monitoring = false;
+      document.getElementById('btn-start').classList.remove('active');
+      document.getElementById('sys-label').textContent = 'MONITORING STOPPED';
+      if (uptimeInterval) clearInterval(uptimeInterval);
+      addLog('warning', 'SYSTEM · Monitoring stopped');
+    });
+  }
+
+  function trainModel() {
+    addLog('info', 'SYSTEM · Training face model...');
+    window.pywebview.api.train_model().then(res => {
+      if (res.status === 'success') {
+        addLog('info', `TRAIN · ${res.message}`);
+      } else {
+        addLog('warning', `TRAIN ERROR · ${res.message}`);
+      }
+    });
+  }
+
+  function testTelegram() {
+    const el = document.getElementById('tg-status');
+    el.style.color = 'var(--amber)';
+    el.textContent = 'SENDING...';
+    window.pywebview.api.test_telegram().then(res => {
+      el.textContent = res.status === 'sent' ? 'SENT ✓' : 'FAILED';
+      el.style.color = res.status === 'sent' ? 'var(--green)' : 'var(--red)';
+      addLog(res.status === 'sent' ? 'info' : 'warning', `TELEGRAM · ${res.message}`);
+      setTimeout(() => { el.textContent = 'CONNECTED'; el.style.color = 'var(--green)'; }, 3000);
+    });
+  }
+</script>
+</body>
+</html>
