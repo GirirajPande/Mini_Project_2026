@@ -1,5 +1,5 @@
 # Mini_Project_2026
-# Smart Surveillance System using Face Authentication & Threat Detection
+# Vision Based Threat Detection System with Automated Alert Mechanism
 
 ## Overview
 This project is an AI-powered **smart surveillance system** that combines **face authentication, object/threat detection, and real-time alerts** to improve security monitoring. The system verifies authorized users through facial recognition and detects potentially dangerous objects using YOLOv8.
